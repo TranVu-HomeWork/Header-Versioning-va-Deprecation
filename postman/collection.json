@@ -1,0 +1,72 @@
+{
+  "info": {
+    "_postman_id": "7b89e1b2-31c1-459d-8d54-b97ed4eae5e6",
+    "name": "API Header Versioning",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get books - v1",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Api-Version", "value": "v1" }],
+        "url": "{{baseUrl}}/api/books"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+        "pm.test('v1 includes deprecation headers', function () { pm.expect(pm.response.headers.get('Deprecation')).to.eql('true'); });",
+        "pm.test('v1 author is a string', function () { pm.expect(pm.response.json().data[0].author).to.be.a('string'); });"
+      ] } }]
+    },
+    {
+      "name": "Get books - v2",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Api-Version", "value": "v2" }],
+        "url": "{{baseUrl}}/api/books?limit=1"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+        "pm.test('v2 author is an object', function () { pm.expect(pm.response.json().data[0].author).to.be.an('object'); });",
+        "pm.test('limit is applied', function () { pm.expect(pm.response.json().data).to.have.lengthOf(1); });"
+      ] } }]
+    },
+    {
+      "name": "Edge - empty body",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/books"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Empty body returns 400', function () { pm.response.to.have.status(400); });",
+        "pm.test('Response marks request as unsuccessful', function () { pm.expect(pm.response.json().success).to.eql(false); });"
+      ] } }]
+    },
+    {
+      "name": "Edge - malformed JSON",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Broken JSON\",\n", "options": { "raw": { "language": "json" } } },
+        "url": "{{baseUrl}}/api/books"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Malformed JSON returns 400', function () { pm.response.to.have.status(400); });",
+        "pm.test('Response is JSON', function () { pm.response.to.be.json; });"
+      ] } }]
+    },
+    {
+      "name": "Edge - limit exceeds maximum",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Api-Version", "value": "v2" }],
+        "url": "{{baseUrl}}/api/books?limit=101"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Large limit returns 400', function () { pm.response.to.have.status(400); });",
+        "pm.test('Limit error is reported', function () { pm.expect(pm.response.json().message).to.include('limit'); });"
+      ] } }]
+    }
+  ]
+}

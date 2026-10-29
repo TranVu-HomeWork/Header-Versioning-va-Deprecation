@@ -2,9 +2,10 @@
   "name": "api-header-versioning",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js",
+    "test:api": "concurrently --kill-others-on-fail --success first \"npm run start\" \"wait-on http://127.0.0.1:3000/api/books && newman run postman/collection.json -e postman/env.json --reporters cli,htmlextra --reporter-htmlextra-export reports/newman-report.html\""
   },
   "keywords": [],
   "author": "",
@@ -12,5 +13,12 @@
   "type": "commonjs",
   "dependencies": {
     "express": "^5.3.0"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6",
+    "newman": "^6.2.3",
+    "newman-reporter-htmlextra": "^1.23.1",
+    "start-server-and-test": "^2.1.5",
+    "wait-on": "^9.5.1"
   }
 }
